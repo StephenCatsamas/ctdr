@@ -235,10 +235,16 @@ class field{
                 double xc = c * jc - s * ic;  
                 double yc = s * jc + c * ic;  
                 
-                int x = xc+width/2;
-                int y = yc+height/2;
+                double x,y;
+                double xf = modf(xc+width/2.0, &x);
+                double yf = modf(yc+height/2.0, &y);
                 
-                tmp[i][j] = getz(y,x,0.0);
+                //bilinear interpolation
+                
+                tmp[i][j] =        (1.0-xf)*yf*getz(y+1,x,0.0) 
+                           +             xf*yf*getz(y+1,x+1,0.0)
+                           + (1.0-xf)*(1.0-yf)*getz(y,x,0.0)   
+                           +       xf*(1.0-yf)*getz(y,x+1,0.0);
 
 
             }
