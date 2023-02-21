@@ -1,0 +1,81 @@
+TGT_DIR = .\target\make
+INC_DIR = .\inc
+
+CC = cl
+OBJ_DIR = .\target\obj 
+OPLEVEL = /O2 
+# OPLEVEL = /Od /DEBUG
+CFLAGS = /I $(INC_DIR) /std:c++17 $(OPLEVEL)  /Zi /Fo$(OBJ_DIR)\ /Fe.\target\  /EHsc
+MAIN_CFLAGS = $(CFLAGS) 
+LIB_CFLAGS =  $(CFLAGS) /LD
+
+MAIN_SOURCE = src\main.cpp 
+LIB_SOURCE = src\lib.cpp 
+
+OBJ_FILES = $(OBJ_DIR)\lodepng.obj $(OBJ_DIR)\util.obj
+
+default: all
+all: $(TGT_DIR)\main $(TGT_DIR)\lib
+
+$(OBJ_DIR)\util.obj: src\util.cpp inc\util.h
+	$(CC) /c $(CFLAGS) src\util.cpp
+
+$(OBJ_DIR)\lodepng.obj: src\lodepng.cpp inc\lodepng.h
+	$(CC) /c $(CFLAGS) src\lodepng.cpp
+
+$(TGT_DIR)\obj: $(OBJ_FILES)
+	echo. > $(TGT_DIR)\obj
+
+$(TGT_DIR)\main: $(MAIN_SOURCE) inc\main.h $(TGT_DIR)\obj
+	$(CC) $(MAIN_CFLAGS) $(MAIN_SOURCE) $(OBJ_FILES) 
+	echo. > $(TGT_DIR)\main
+
+$(TGT_DIR)\lib: $(LIB_SOURCE) inc\lib.h  $(TGT_DIR)\obj
+	$(CC) $(LIB_CFLAGS) $(LIB_SOURCE) $(OBJ_FILES)
+	echo. > $(TGT_DIR)\lib
+
+
+# $(TGT_DIR)\copy: $(TGT_DIR)\lib
+#	copy target\lib.dll app\lib.dll
+#	echo. > $(TGT_DIR)\copy
+
+.PHONY: main
+main: $(TGT_DIR)\main
+
+.PHONY: lib
+lib: $(TGT_DIR)\lib
+
+# .PHONY: runpy
+# runpy: $(TGT_DIR)\copy
+#	@cd app
+#	main.py
+#	@cd ..
+
+# .PHONY: runopt
+# runopt: $(TGT_DIR)\copy
+#	@cd app
+#	opti.py
+#	@cd ..
+
+
+# .PHONY: test
+# test: $(TGT_DIR)\copy
+#	@cd app
+#	autotest.py
+#	@cd ..
+
+.PHONY: runc
+runc: $(TGT_DIR)\main
+	.\target\main.exe
+
+# .PHONY: runvis
+# runvis:
+#	@cd app
+#	vis.py
+#	@cd ..
+
+.PHONY: clean
+clean:
+	cd target
+	del * /S /Q
+	cd ..
