@@ -4,6 +4,13 @@
 
 #include "util.h"
 
+int project(const field<double>& phantom, const double angle, std::vector<double> projection){
+    
+    
+    return 1;
+}
+
+
 
 int main() {
     out.log(INF) << "ctdr" << std::endl;
@@ -12,7 +19,7 @@ int main() {
     
     auto phantom = png2doub("data/phantom.png", R_ONLY);
     
-    phantom[128][128] = 500;
+    phantom.rot(0.154);
     
     std::cout << "saving phantom" << std::endl;
     doub2png("data/output.png", phantom);

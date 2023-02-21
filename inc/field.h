@@ -219,6 +219,32 @@ class field{
                 (*this)[i][j] = z;
             }
         }
+        
+        //rotates the field //radians
+        void rot(double angle){
+            field<T> tmp = field<T>(height, width);
+            
+            double c = cos(angle);
+            double s = sin(angle);
+            
+            for(int i = 0; i< height; i++){
+            for(int j = 0; j< width; j++){
+                //rotate (j,i) on to coordinate on old image (x,y)
+                int jc  = j-width/2;
+                int ic  = i-height/2;
+                double xc = c * jc - s * ic;  
+                double yc = s * jc + c * ic;  
+                
+                int x = xc+width/2;
+                int y = yc+height/2;
+                
+                tmp[i][j] = getz(y,x,0.0);
+
+
+            }
+            }            
+            data = tmp.data;
+        }
 
         //interpolates a field from a field of a different size
         void interpolate(field<T>& f){

@@ -44,7 +44,8 @@ field<double> png2doub(const char* fp, png_mode mode){
 
         if (mode == R_ONLY){
 
-        fld[i][j] = ((int)r - 128); 
+        // fld[i][j] = ((int)r - 128); 
+            fld[i][j] = r/255.0; 
         }else if (mode == RGBA){
             uint32_t col = PACK(r,g,b,a); 
             fld[i][j] = *(float*)&col;//interpret int data as float
@@ -100,13 +101,14 @@ void doub2png(const char* fp, const field<double>& f){
     int h = f.height;
     int w = f.width;
 
-    double bnd = std::max(abs(f.min()), abs(f.max()));
+    // double bnd = std::max(abs(f.min()), abs(f.max()));
 
-    double mn = -bnd;
-    double mx = bnd;
+    // double mn = -bnd;
+    // double mx = bnd;
 
     for(auto v : f.data){
-        uint8_t pixv = (v - mn)/(mx - mn)*255;
+        // uint8_t pixv = (v - mn)/(mx - mn)*255;
+        uint8_t pixv = v*255;
         write_pixle(image,PACK(pixv,pixv,pixv,0xFF));
         // if(v > 0){
             // write_pixle(image,PACK(0xFF,0,0,0xFF));
