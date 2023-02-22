@@ -2,12 +2,20 @@
 #include <numbers>
 #include <algorithm>
 #include <string>
+#include <complex>
+#include <vector>
 
 #include "field.h"
 
 #include "util.h"
 
+#include "pocketfft.h"
+
+using namespace pocketfft;
+
 double pi = std::numbers::pi_v<double>;
+
+#define PROJECTIONS (256)
 
 int project(const field<double>& phantom, const double angle, std::vector<double>& projection){
     
@@ -58,7 +66,7 @@ int back_project(const std::vector<double>& projection, double angle, field<doub
 
 int recon_bp(const field<double>& phantom, field<double>& tomogram){
     
-    const double angle_step = 2*pi/32;
+    const double angle_step = 2*pi/PROJECTIONS;
     
     tomogram.fill(0.0);
     for(double angle = 0.0; angle < 2*pi; angle += angle_step){
@@ -75,7 +83,7 @@ int recon_bp(const field<double>& phantom, field<double>& tomogram){
 
 int recon_fbp(const field<double>& phantom, field<double>& tomogram){
     
-    const double angle_step = 2*pi/32;
+    const double angle_step = 2*pi/PROJECTIONS;
     
     tomogram.fill(0.0);
     for(double angle = 0.0; angle < 2*pi; angle += angle_step){
@@ -83,6 +91,44 @@ int recon_fbp(const field<double>& phantom, field<double>& tomogram){
         auto back_projection = field<double>(tomogram.height,tomogram.width);
         std::vector<double> projection;
         project(phantom, angle, projection);
+        
+        //fft stuff
+
+        shape_t shape = {projection.size()};
+        stride_t stride_r = {sizeof(double)};
+        stride_t stride_c = {sizeof(std::complex<double>)};
+        shape_t axes = {0};
+
+        auto f_projection = std::vector<std::complex<double>>(shape[0]/2 + 1);
+        double scale_factor = 1.0;
+
+        r2c(shape,
+            stride_r, 
+            stride_c, 
+            axes,
+            FORWARD, 
+            projection.data(), 
+            f_projection.data(), 
+            scale_factor);
+        
+        //filter
+        for(int i = 0; i < shape[0]/2 + 1; i++){
+            double filt_val = 2*pi*(i+1.0)/PROJECTIONS;
+            f_projection[i] *= filt_val;
+        }    
+        
+        c2r(shape,
+            stride_c, 
+            stride_r, 
+            axes,
+            BACKWARD, 
+            f_projection.data(), 
+            projection.data(), 
+            scale_factor);
+            
+        //end fft stuff    
+            
+        
         back_project(projection, angle, back_projection);
         tomogram += back_projection;
        
@@ -99,7 +145,8 @@ int main() {
     
     auto tomogram = field<double>(phantom.height, phantom.width);
         
-    recon_bp(phantom, tomogram);
+    // recon_bp(phantom, tomogram);
+    recon_fbp(phantom, tomogram);
     
     double tm_mx = tomogram.max();
     tomogram *= 1.0/tm_mx;
