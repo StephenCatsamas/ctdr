@@ -82,6 +82,12 @@ class field{
                 data[i] = v;
             }
         }
+        
+         void clamp(T min, T max){
+            for(int i = 0; i < width*height ; i++){
+                data[i] = std::clamp(data[i], min, max);
+            }
+        }
 
         T max() const{
             return std::max_element(data.begin(), data.end())[0];

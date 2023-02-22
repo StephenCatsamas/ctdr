@@ -33,7 +33,4 @@ extern logger out;
 std::tuple<std::vector<unsigned char>,unsigned,unsigned> decode_png(const char* filename);
 void encode_png(const char* , std::vector<unsigned char>& , unsigned , unsigned);
 
-
-
-
 #endif UTIL_H

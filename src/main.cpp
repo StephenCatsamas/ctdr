@@ -15,7 +15,7 @@ using namespace pocketfft;
 
 double pi = std::numbers::pi_v<double>;
 
-#define PROJECTIONS (256)
+#define PROJECTIONS (512)
 
 int project(const field<double>& phantom, const double angle, std::vector<double>& projection){
     
@@ -75,7 +75,7 @@ int recon_bp(const field<double>& phantom, field<double>& tomogram){
         std::vector<double> projection;
         project(phantom, angle, projection);
         back_project(projection, angle, back_projection);
-        tomogram += back_projection;
+        tomogram += back_projection* (0.5/(PROJECTIONS*back_projection.height));
        
     }
     return 1; 
@@ -83,7 +83,7 @@ int recon_bp(const field<double>& phantom, field<double>& tomogram){
 
 int recon_fbp(const field<double>& phantom, field<double>& tomogram){
     
-    const double angle_step = 2*pi/PROJECTIONS;
+    const double angle_step = 2*pi/PROJECTIONS;   
     
     tomogram.fill(0.0);
     for(double angle = 0.0; angle < 2*pi; angle += angle_step){
@@ -93,6 +93,8 @@ int recon_fbp(const field<double>& phantom, field<double>& tomogram){
         project(phantom, angle, projection);
         
         //fft stuff
+        //pad projection
+        projection.resize(2*projection.size(), 0.0);
 
         shape_t shape = {projection.size()};
         stride_t stride_r = {sizeof(double)};
@@ -100,7 +102,7 @@ int recon_fbp(const field<double>& phantom, field<double>& tomogram){
         shape_t axes = {0};
 
         auto f_projection = std::vector<std::complex<double>>(shape[0]/2 + 1);
-        double scale_factor = 1.0;
+        double scale_factor = 0.5/projection.size();
 
         r2c(shape,
             stride_r, 
@@ -113,8 +115,9 @@ int recon_fbp(const field<double>& phantom, field<double>& tomogram){
         
         //filter
         for(int i = 0; i < shape[0]/2 + 1; i++){
-            double filt_val = 2*pi*(i+1.0)/PROJECTIONS;
-            f_projection[i] *= filt_val;
+            double weight = 2*pi*(i);
+            // double window = 0.54+0.46*cos(2*pi*i/(4*shape[0]/2));
+            f_projection[i] *= weight;
         }    
         
         c2r(shape,
@@ -124,13 +127,14 @@ int recon_fbp(const field<double>& phantom, field<double>& tomogram){
             BACKWARD, 
             f_projection.data(), 
             projection.data(), 
-            scale_factor);
-            
+            1.0);
+   
+        //unpad projection
+        projection.resize(back_projection.width);
         //end fft stuff    
-            
-        
+                
         back_project(projection, angle, back_projection);
-        tomogram += back_projection;
+        tomogram += back_projection * (0.5/(PROJECTIONS*back_projection.height));
        
     }
     return 1; 
@@ -149,8 +153,8 @@ int main() {
     recon_fbp(phantom, tomogram);
     
     double tm_mx = tomogram.max();
-    tomogram *= 1.0/tm_mx;
-       
+    out.log(INF) << tm_mx << std::endl;
+    tomogram.clamp(0.0,1.0);
     
     out.log(INF) << "saving tomogram" << std::endl;
     doub2png("data/tomogram.png", tomogram);
