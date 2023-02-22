@@ -73,6 +73,23 @@ int recon_bp(const field<double>& phantom, field<double>& tomogram){
     return 1; 
 }
 
+int recon_fbp(const field<double>& phantom, field<double>& tomogram){
+    
+    const double angle_step = 2*pi/32;
+    
+    tomogram.fill(0.0);
+    for(double angle = 0.0; angle < 2*pi; angle += angle_step){
+        out.log(INF) << angle << std::endl;
+        auto back_projection = field<double>(tomogram.height,tomogram.width);
+        std::vector<double> projection;
+        project(phantom, angle, projection);
+        back_project(projection, angle, back_projection);
+        tomogram += back_projection;
+       
+    }
+    return 1; 
+}
+
 int main() {
     out.log(INF) << "ctdr" << std::endl;
     
