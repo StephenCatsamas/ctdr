@@ -5,7 +5,7 @@ CC = cl
 OBJ_DIR = .\target\obj 
 OPLEVEL = /O2 
 # OPLEVEL = /Od /DEBUG
-CFLAGS = /I $(INC_DIR) /std:c++17 $(OPLEVEL)  /Zi /Fo$(OBJ_DIR)\ /Fe.\target\  /EHsc
+CFLAGS = /I $(INC_DIR) /std:c++20 $(OPLEVEL)  /Zi /Fo$(OBJ_DIR)\ /Fe.\target\  /EHsc
 MAIN_CFLAGS = $(CFLAGS) 
 LIB_CFLAGS =  $(CFLAGS) /LD
 

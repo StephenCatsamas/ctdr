@@ -91,25 +91,25 @@ class field{
             return std::min_element(data.begin(), data.end())[0];
         }
 
-        //save to csv
-        void save(const char* fp, char delimiter = ','){
-            std::ofstream outfile;
-            outfile.open(fp);
+        // //save to csv
+        // void save(const char* fp, char delimiter = ','){
+            // std::ofstream outfile;
+            // outfile.open(fp);
 
-            int xpos = 0;
-            for(T val : data){
-                xpos++;
-                outfile << std::setprecision(16) << val << delimiter;
-                if(xpos == width){
-                long pos = outfile.tellp();//replace last delimiter with newline
-                outfile.seekp(pos-1);
-                outfile.put('\n');
-                xpos = 0;
-                }
-            }
+            // int xpos = 0;
+            // for(T val : data){
+                // xpos++;
+                // outfile << std::setprecision(16) << val << delimiter;
+                // if(xpos == width){
+                // long pos = outfile.tellp();//replace last delimiter with newline
+                // outfile.seekp(pos-1);
+                // outfile.put('\n');
+                // xpos = 0;
+                // }
+            // }
 
-            outfile.close();
-        }
+            // outfile.close();
+        // }
         ///load from csv
         static field<T> load(const char* fp){
             auto fld = field<T>();
