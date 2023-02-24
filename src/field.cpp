@@ -109,7 +109,7 @@ void doub2png(const char* fp, const field<double>& f){
     for(auto v : f.data){
         // uint8_t pixv = (v - mn)/(mx - mn)*255;
         uint8_t pixv = v*255;
-        write_pixle(image,PACK(pixv,pixv,pixv,0xFF));
+        write_pixle(image,PACK(pixv,255-pixv,pixv,0xFF));
         // if(v > 0){
             // write_pixle(image,PACK(0xFF,0,0,0xFF));
         // }else{

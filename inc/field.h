@@ -6,6 +6,7 @@
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
+#include <complex>
 
 template<typename T>
 class field{
@@ -287,9 +288,30 @@ class field{
             }
 
         }
-
-
+        
 };
+
+template<typename T>
+field<T> abs(const field<std::complex<T>> in){
+    auto out = field<T>(in.height, in.width);
+    
+    for(int i = 0; i < in.data.size(); i++){
+        out.data[i] = std::abs(in.data[i]);
+    }
+    
+    return out;
+}
+
+template<typename T>
+field<T> arg(const field<std::complex<T>> in){
+    auto out = field<T>(in.height, in.width);
+    
+    for(int i = 0; i < in.data.size(); i++){
+        out.data[i] = std::arg(in.data[i]);
+    }
+    
+    return out;
+}
 
 template<typename T>
 inline field<T>& operator*(field<T>& f, const T v){
