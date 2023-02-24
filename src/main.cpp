@@ -15,7 +15,7 @@ using namespace pocketfft;
 
 double pi = std::numbers::pi_v<double>;
 
-#define PROJECTIONS (512)
+#define PROJECTIONS (256)
 
 int project(const field<double>& phantom, const double angle, std::vector<double>& projection){
     
@@ -66,7 +66,7 @@ int back_project(const std::vector<double>& projection, double angle, field<doub
 
 int recon_bp(const field<double>& phantom, field<double>& tomogram){
     
-    const double angle_step = 2*pi/PROJECTIONS;
+    const double angle_step = 2.0*pi/PROJECTIONS;
     
     tomogram.fill(0.0);
     for(double angle = 0.0; angle < 2*pi; angle += angle_step){
@@ -83,10 +83,10 @@ int recon_bp(const field<double>& phantom, field<double>& tomogram){
 
 int recon_fbp(const field<double>& phantom, field<double>& tomogram){
     
-    const double angle_step = 2*pi/PROJECTIONS;   
+    const double angle_step = 2.0*pi/PROJECTIONS;   
     
     tomogram.fill(0.0);
-    for(double angle = 0.0; angle < 2*pi; angle += angle_step){
+    for(double angle = 0.0; angle < 2.0*pi; angle += angle_step){
         out.log(INF) << angle << std::endl;
         auto back_projection = field<double>(tomogram.height,tomogram.width);
         std::vector<double> projection;
