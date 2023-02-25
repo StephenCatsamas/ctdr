@@ -7,7 +7,7 @@
 #include<tuple>
 #include<vector>
 
-logger out = logger(DBG, std::cout);
+logger out = logger(INF, std::cout);
 
 logger::logger(print_mode, std::ostream& output){
   printer = &output;

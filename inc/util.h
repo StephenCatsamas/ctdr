@@ -5,6 +5,8 @@
 #include<tuple>
 #include<vector>
 
+#include "vec.h"
+
 enum png_mode{
     R_ONLY,
     RGBA,

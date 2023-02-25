@@ -350,42 +350,6 @@ inline  field<T>& operator+(field<T>& f, const field<T>& h){
     return f;
 }
 
-template<typename T>
-std::vector<T> operator+(const std::vector<T>& p, const std::vector<T>& q) {
-    // Make sure both vectors have the same size
-    if (p.size() != q.size()) {
-        throw std::invalid_argument("Vectors must have the same size");
-    }
-
-    // Create a new vector to store the result
-    std::vector<T> result(p.size());
-
-    // Add the corresponding elements of p and q and store the result in the result vector
-    for (std::size_t i = 0; i < p.size(); ++i) {
-        result[i] = p[i] + q[i];
-    }
-
-    return result;
-}
-
-template<typename T>
-std::vector<T> operator-(const std::vector<T>& p, const std::vector<T>& q) {
-    // Make sure both vectors have the same size
-    if (p.size() != q.size()) {
-        throw std::invalid_argument("Vectors must have the same size");
-    }
-
-    // Create a new vector to store the result
-    std::vector<T> result(p.size());
-
-    // Add the corresponding elements of p and q and store the result in the result vector
-    for (std::size_t i = 0; i < p.size(); ++i) {
-        result[i] = p[i] - q[i];
-    }
-
-    return result;
-}
-
 field<double> png2doub(const char* fp, png_mode mode = R_ONLY);
 field<int> png2int(const char* fp);
 void doub2png(const char* fp, const field<double>& f, png_out_mode mode = RAW);
