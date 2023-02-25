@@ -219,6 +219,33 @@ class field{
                 return z;
             }
         }
+        
+        //gets value bilinearly, clamping to be in range
+        T get_bilinear(double y, double x) const{
+            if(0 <= y && y < height-1 && 0 <= x && x < width-1){
+                double yf,xf;//fractional parts
+                double yi,xi;//integral parts
+                int i,j;
+                
+                yf = modf(y, &yi);
+                xf = modf(x, &xi);
+                i = (int)yi;
+                j = (int)xi;
+                
+                T v = 0.0;
+                
+                v += (*this)[i  ][j  ] * (1.0 - xf) * (1.0 - yf);
+                v += (*this)[i+1][j  ] * (1.0 - xf) * (      yf);
+                v += (*this)[i  ][j+1] * (      xf) * (1.0 - yf);
+                v += (*this)[i+1][j+1] * (      xf) * (      yf);
+                
+                return v;
+            }else{
+                int i = std::clamp(y, 0.0, height-1.0);
+                int j = std::clamp(x, 0.0, width-1.0);
+                return (*this)[i][j];
+            }
+        }
 
          //set value or does nothing
         void setz(int i, int j, T z){
@@ -242,16 +269,7 @@ class field{
                 double xc = c * jc - s * ic;  
                 double yc = s * jc + c * ic;  
                 
-                double x,y;
-                double xf = modf(xc+width/2.0, &x);
-                double yf = modf(yc+height/2.0, &y);
-                
-                //bilinear interpolation
-                
-                tmp[i][j] =        (1.0-xf)*yf*getz(y+1,x,0.0) 
-                           +             xf*yf*getz(y+1,x+1,0.0)
-                           + (1.0-xf)*(1.0-yf)*getz(y,x,0.0)   
-                           +       xf*(1.0-yf)*getz(y,x+1,0.0);
+                tmp[i][j] = get_bilinear(yc+height/2.0,xc+width/2.0);
 
 
             }
@@ -273,17 +291,8 @@ class field{
                 //exact position
                 double jpos = j*xscale;
                 double ipos = i*yscale;
-                double js;
-                double is;
-                double jfrac = modf(jpos, &js);
-                double ifrac = modf(ipos, &is);
 
-                //2d interpolation
-                 double a = (ifrac)    *(1.0-jfrac)*f.get(is+1,js) ;
-                 double b = (ifrac)    *(jfrac)    *f.get(is+1,js+1) ;
-                 double c = (1.0-ifrac)*(1.0-jfrac)*f.get(is,js) ;
-                 double d = (1.0-ifrac)*(jfrac)*f.get(is,js+1);
-                (*this)[i][j] = a + b + c + d;
+                (*this)[i][j] = get_bilinear(ipos,jpos);
             }
             }
 

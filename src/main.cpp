@@ -199,7 +199,8 @@ int recon_dfi(const field<double>& phantom, field<double>& tomogram){
         int jw  = (j+width/2 ) % width;
         int iw  = (i+height/2 ) % height;
    
-        f_tomogram[iw][jw] = f_polar_proj[theta][r];    
+        // f_tomogram[iw][jw] = f_polar_proj[theta][r];    
+        f_tomogram[iw][jw] = f_polar_proj.get_bilinear(theta,r);    
         
     }
     } 
@@ -328,7 +329,7 @@ int main() {
     out.log(INF) << "loading phantom" << std::endl;
     
     auto phantom = png2doub("data/phantom.png", R_ONLY);
-    
+        
     auto tomogram = field<double>(phantom.height, phantom.width);
         
     // recon_bp(phantom, tomogram);
