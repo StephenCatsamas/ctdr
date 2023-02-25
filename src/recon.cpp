@@ -4,8 +4,7 @@
 #include "field.h"
 #include "pocketfft.h"
 
-#include <numbers>
-double pi = std::numbers::pi_v<double>;
+
 
 using namespace pocketfft;
 
@@ -42,7 +41,7 @@ int back_project(const std::vector<double>& projection, double angle, field<doub
 
 
 
-int recon_bp(const field<double>& phantom, int n_proj, field<double>& tomogram){
+int recon_bp(const field<double>& phantom, const int n_proj, field<double>& tomogram){
     
     const double angle_step = 2.0*pi/n_proj;
     
@@ -61,7 +60,7 @@ int recon_bp(const field<double>& phantom, int n_proj, field<double>& tomogram){
     return 1; 
 }
 
-int recon_fbp(const field<double>& phantom, int n_proj, field<double>& tomogram){
+int recon_fbp(const field<double>& phantom, const int n_proj, field<double>& tomogram){
     
     const double angle_step = 2.0*pi/n_proj;   
     
@@ -121,19 +120,18 @@ int recon_fbp(const field<double>& phantom, int n_proj, field<double>& tomogram)
 }
 
 
-int recon_dfi(const field<double>& phantom, int n_proj, field<double>& tomogram){
-    
-    const int pf = 2.0;//padding factor
+int recon_dfi(const field<double>& phantom, const int n_proj, const int pf, field<double>& tomogram){
     
     const double angle_step = 2.0*pi/n_proj;   
     auto f_polar_proj = field<std::complex<double>>(n_proj,pf*tomogram.width/2 + 1);
     auto f_tomogram = field<std::complex<double>>(tomogram.height,tomogram.width, 0.0);
+    std::vector<double> projection;
     tomogram.fill(0.0);
+    //polar fouier space
     for(int i = 0; i < n_proj; i++){
         double angle = i * angle_step;
         // out.log(INF) << angle << std::endl;
         
-        std::vector<double> projection;
         project(phantom, angle, projection);
         
         projection.resize(pf*projection.size(), 0.0);
@@ -145,7 +143,7 @@ int recon_dfi(const field<double>& phantom, int n_proj, field<double>& tomogram)
         shape_t axes = {0};
 
         auto f_projection = std::vector<std::complex<double>>(shape[0]/2 + 1);
-        double scale_factor = 0.5/(phantom.width*phantom.width);
+        double scale_factor = 0.5/(phantom.width*phantom.height);
 
         r2c(shape,
             stride_r, 
@@ -156,38 +154,17 @@ int recon_dfi(const field<double>& phantom, int n_proj, field<double>& tomogram)
             f_projection.data(), 
             scale_factor);
         
-        
         std::copy(f_projection.begin(), f_projection.end(), 
                   f_polar_proj.data.begin()+(f_polar_proj.width*i));       
     }
-    out.log(INF) << "interpolaring to cart" << std::endl;
-    
-    //interpolar polar to rect field
-    int height = f_tomogram.height;
-    int width = f_tomogram.width;
-    for(int i = 0; i< height; i++){
-    for(int j = 0; j< width; j++){
-        //from rect (i,j) to polar (r,theta)
-        int jc  = (j-width/2) ;
-        int ic  = (i-height/2) ;
-        
-        int r = pf*sqrt(jc*jc + ic*ic);
-        if(r >= f_polar_proj.width){continue;}
 
-        int theta = int(n_proj*(atan2(ic,jc)/(2*pi) + 1.0)) % n_proj;
-        
-        int jw  = (j+width/2 ) % width;
-        int iw  = (i+height/2 ) % height;
-   
-        // f_tomogram[iw][jw] = f_polar_proj[theta][r];    
-        f_tomogram[iw][jw] = f_polar_proj.get_bilinear(theta,r);    
-        
-    }
-    } 
-    out.log(INF) << "fourier transforming" << std::endl;
+    pol2cart(f_polar_proj, f_tomogram);
+
     
-    shape_t shape_2d = {(size_t)f_tomogram.width, (size_t)f_tomogram.height};
-    stride_t stride_2d = {sizeof(std::complex<double>),sizeof(std::complex<double>)*f_tomogram.width};
+    shape_t shape_2d = {(size_t)f_tomogram.width, 
+                        (size_t)f_tomogram.height};
+    stride_t stride_2d = {sizeof(std::complex<double>),
+                          sizeof(std::complex<double>)*f_tomogram.width};
     shape_t axes_2d = {0,1};   
                
     c2c(shape_2d,
@@ -199,34 +176,31 @@ int recon_dfi(const field<double>& phantom, int n_proj, field<double>& tomogram)
         f_tomogram.data.data(), 
         1.0);
     
-    
-    for(int i = 0; i< height; i++){
-    for(int j = 0; j< width; j++){
-        int ic = (i+height/2)%height;
-        int jc = (j+width/2)%width;
+    for(int i = 0; i< f_tomogram.height; i++){
+    for(int j = 0; j< f_tomogram.width; j++){
+        int ic = (i+f_tomogram.height/2)%f_tomogram.height;
+        int jc = (j+f_tomogram.width/2)%f_tomogram.width;
         tomogram[i][j] = 2.0*std::abs(f_tomogram[ic][jc]);
     }
     }
+    {
+    // out.log(INF) << "saving" << std::endl;
+    // field<double> real_field;
+    // real_field = abs(f_polar_proj);
+    // doub2png("data/sinogram_abs.png", real_field, SCALE);
+    // real_field = arg(f_polar_proj);
+    // doub2png("data/sinogram_arg.png", real_field, SCALE_ZERO);
     
-    out.log(INF) << "saving" << std::endl;
-    field<double> real_field;
-    real_field = abs(f_polar_proj);
-    doub2png("data/sinogram_abs.png", real_field, SCALE);
-    real_field = arg(f_polar_proj);
-    doub2png("data/sinogram_arg.png", real_field, SCALE_ZERO);
-    
-    real_field = abs(f_tomogram);
-    doub2png("data/f_tomogram_abs.png", real_field, SCALE);
-    real_field = arg(f_tomogram);
-    doub2png("data/f_tomogram_arg.png", real_field, SCALE_ZERO);
-    
-    out.log(INF) << tomogram.max() << std::endl;
-    doub2png("data/tomogram.png", tomogram);
- 
+    // real_field = abs(f_tomogram);
+    // doub2png("data/f_tomogram_abs.png", real_field, SCALE);
+    // real_field = arg(f_tomogram);
+    // doub2png("data/f_tomogram_arg.png", real_field, SCALE_ZERO);
+    }
+     
     return 1;
 }
 
-int recon_art(const field<double>& phantom, int n_proj, field<double>& tomogram){
+int recon_art(const field<double>& phantom, const int n_proj, field<double>& tomogram){
     
     tomogram.fill(0.0);
     const double angle_step = 2.0*pi/n_proj; 
@@ -241,11 +215,9 @@ int recon_art(const field<double>& phantom, int n_proj, field<double>& tomogram)
         project(tomogram, angle, q);
         
         auto correction = p-q;
+        correction *= (0.8/(tomo_delta.height));
         back_project(correction, angle, tomo_delta);
-        
-        
-        
-        tomogram += tomo_delta*(0.8/(tomo_delta.height));
+        tomogram += tomo_delta;
             
     }
     return 1;

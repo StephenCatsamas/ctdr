@@ -7,6 +7,10 @@
 
 #include "vec.h"
 
+
+extern double pi;
+
+
 enum png_mode{
     R_ONLY,
     RGBA,

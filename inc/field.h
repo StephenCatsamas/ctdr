@@ -297,8 +297,32 @@ class field{
             }
 
         }
-        
+                
 };
+
+template<typename T>
+int pol2cart(const field<T>& p, field<T>& c){
+    double r_sf = p.width/(0.5*c.width);//radial scale factor
+    for(int i = 0; i< c.height; i++){
+    for(int j = 0; j< c.width; j++){
+        //from rect (i,j) to polar (r,theta)
+        int jc  = (j-c.width/2) ;
+        int ic  = (i-c.height/2) ;
+        
+        int r = r_sf*sqrt(jc*jc + ic*ic);
+        if(r >= p.width){continue;}
+
+        int theta = int(p.height*(atan2(ic,jc)/(2*pi) + 1.0)) % p.height;
+        
+        int jw = (j+c.width/2) % c.width;
+        int iw = (i+c.height/2) % c.height;
+       
+        c[iw][jw] = p.get_bilinear(theta,r);    
+        
+    }
+    } 
+    return 1;
+}
 
 template<typename T>
 field<T> abs(const field<std::complex<T>> in){

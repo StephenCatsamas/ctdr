@@ -105,10 +105,12 @@ void doub2png(const char* fp, const field<double>& f, png_out_mode mode){
     double mx = f.max();
 
     uint8_t pixv;
+    double vc;
     for(auto v : f.data){
         switch (mode){
             case RAW:
-                pixv = v*255;
+                vc = std::clamp(v, 0.0, 1.0);
+                pixv = vc*255;
                 write_pixle(image,PACK(pixv,pixv,pixv,0xFF));
                 break;
             case SCALE:

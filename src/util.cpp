@@ -6,7 +6,9 @@
 #include <ostream>
 #include<tuple>
 #include<vector>
+#include <numbers>
 
+double pi = std::numbers::pi_v<double>;
 logger out = logger(INF, std::cout);
 
 logger::logger(print_mode, std::ostream& output){

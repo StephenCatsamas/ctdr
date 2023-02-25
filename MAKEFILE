@@ -17,7 +17,7 @@ OBJ_FILES = $(OBJ_DIR)\lodepng.obj $(OBJ_DIR)\util.obj $(OBJ_DIR)\field.obj $(OB
 default: all
 all: $(TGT_DIR)\main $(TGT_DIR)\lib
 
-$(OBJ_DIR)\field.obj: src\recon.cpp inc\recon.h
+$(OBJ_DIR)\recon.obj: src\recon.cpp inc\recon.h
 	$(CC) /c $(CFLAGS) src\recon.cpp
 
 $(OBJ_DIR)\field.obj: src\field.cpp inc\field.h

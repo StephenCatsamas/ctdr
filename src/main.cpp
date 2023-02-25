@@ -4,6 +4,8 @@
 #include <complex>
 #include <vector>
 
+#include <chrono>
+
 #include "field.h"
 #include "util.h"
 #include "recon.h"
@@ -18,29 +20,36 @@ int main() {
     auto phantom = png2doub("data/phantom.png", R_ONLY);
         
     auto tomogram = field<double>(phantom.height, phantom.width);
-        
-    recon_bp(phantom, projections, tomogram);
     
-    tomogram.clamp(0.0,1.0);
-    out.log(INF) << "saving bp" << std::endl;
+    std::chrono::steady_clock::time_point tik,tok;
+    
+    tik = std::chrono::high_resolution_clock::now();
+    recon_bp(phantom, projections, tomogram);
+    tok = std::chrono::high_resolution_clock::now();
+    
+    out.log(INF) << " bp: " << std::chrono::duration_cast<std::chrono::milliseconds>(tok - tik) << std::endl;
     doub2png("data/tomogram_bp.png", tomogram);
     
+    tik = std::chrono::high_resolution_clock::now();
     recon_fbp(phantom, projections, tomogram);
-    
-    tomogram.clamp(0.0,1.0);
-    out.log(INF) << "saving fbp" << std::endl;
+    tok = std::chrono::high_resolution_clock::now();
+
+    out.log(INF) << "fbp: " << std::chrono::duration_cast<std::chrono::milliseconds>(tok - tik) << std::endl;
     doub2png("data/tomogram_fbp.png", tomogram);
     
-    recon_dfi(phantom, projections, tomogram);
+    const int padding_factor = 8.0;
+    tik = std::chrono::high_resolution_clock::now();
+    recon_dfi(phantom, projections, padding_factor, tomogram);
+    tok = std::chrono::high_resolution_clock::now();
     
-    tomogram.clamp(0.0,1.0);
-    out.log(INF) << "saving dfi" << std::endl;
+    out.log(INF) << "fdi: " << std::chrono::duration_cast<std::chrono::milliseconds>(tok - tik) << std::endl;
     doub2png("data/tomogram_dfi.png", tomogram);
     
+    tik = std::chrono::high_resolution_clock::now();
     recon_art(phantom, projections, tomogram);
+    tok = std::chrono::high_resolution_clock::now();
     
-    tomogram.clamp(0.0,1.0);
-    out.log(INF) << "saving art" << std::endl;
+    out.log(INF) << "art: " << std::chrono::duration_cast<std::chrono::milliseconds>(tok - tik) << std::endl;
     doub2png("data/tomogram_art.png", tomogram);
     
     
