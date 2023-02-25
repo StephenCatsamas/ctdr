@@ -143,9 +143,11 @@ int recon_fbp(const field<double>& phantom, field<double>& tomogram){
 
 int recon_dfi(const field<double>& phantom, field<double>& tomogram){
     
+    const int pf = 2.0;//padding factor
+    
     const double angle_step = 2.0*pi/PROJECTIONS;   
-    auto f_polar_proj = field<std::complex<double>>(PROJECTIONS,tomogram.width + 1);
-    auto f_tomogram = field<std::complex<double>>(tomogram.height,tomogram.width);
+    auto f_polar_proj = field<std::complex<double>>(PROJECTIONS,pf*tomogram.width/2 + 1);
+    auto f_tomogram = field<std::complex<double>>(tomogram.height,tomogram.width, 0.0);
     tomogram.fill(0.0);
     for(int i = 0; i < PROJECTIONS; i++){
         double angle = i * angle_step;
@@ -154,14 +156,16 @@ int recon_dfi(const field<double>& phantom, field<double>& tomogram){
         std::vector<double> projection;
         project(phantom, angle, projection);
         
-        projection.resize(2*projection.size(), 0.0);
+        projection.resize(pf*projection.size(), 0.0);
+        std::rotate(projection.begin(),projection.begin()+phantom.width/2,projection.end());//rotation very importaint to make phase changes slowly
+        
         shape_t shape = {projection.size()};
         stride_t stride_r = {sizeof(double)};
         stride_t stride_c = {sizeof(std::complex<double>)};
         shape_t axes = {0};
 
         auto f_projection = std::vector<std::complex<double>>(shape[0]/2 + 1);
-        double scale_factor = 0.5/projection.size();
+        double scale_factor = 0.5/(phantom.width*phantom.width);
 
         r2c(shape,
             stride_r, 
@@ -187,29 +191,15 @@ int recon_dfi(const field<double>& phantom, field<double>& tomogram){
         int jc  = (j-width/2) ;
         int ic  = (i-height/2) ;
         
-        double r = 2.0*sqrt(jc*jc + ic*ic);
-        double dump;
-        double theta = PROJECTIONS*modf(atan2(ic,jc)/(2*pi) + 1.5, &dump);
-        
-        //exact position
-        double js;
-        double is;
-        double jfrac = modf(r, &js);
-        double ifrac = modf(theta*PROJECTIONS, &is);
-        // std::cout << << is << ifrac << js << jfrac << std::endl;
+        int r = pf*sqrt(jc*jc + ic*ic);
+        if(r >= f_polar_proj.width){continue;}
 
-        //bilinear interpolation
-        std::complex<double> a = (ifrac)    *(1.0-jfrac)*f_polar_proj.get(is+1,js) ;
-        std::complex<double> b = (ifrac)    *(jfrac)    *f_polar_proj.get(is+1,js+1) ;
-        std::complex<double> c = (1.0-ifrac)*(1.0-jfrac)*f_polar_proj.get(is,js) ;
-        std::complex<double> d = (1.0-ifrac)*(jfrac)*f_polar_proj.get(is,js+1);
+        int theta = int(PROJECTIONS*(atan2(ic,jc)/(2*pi) + 1.0)) % PROJECTIONS;
         
-
         int jw  = (j+width/2 ) % width;
         int iw  = (i+height/2 ) % height;
-        f_tomogram[iw][jw] = a+b+c+d;   
-
-        // f_tomogram[i][j] = phantom[i][j];     
+   
+        f_tomogram[iw][jw] = f_polar_proj[theta][r];    
         
     }
     } 
@@ -227,33 +217,35 @@ int recon_dfi(const field<double>& phantom, field<double>& tomogram){
         f_tomogram.data.data(), 
         f_tomogram.data.data(), 
         1.0);
-        
-    auto f_polar_proj_r = arg(f_polar_proj);
-    out.log(INF) << "saving sinogram" << std::endl;
-    double mx = f_polar_proj_r.max();
-    double mn = f_polar_proj_r.min();
-    f_polar_proj_r += -mn;
-    f_polar_proj_r *= 1/(mx-mn);
-    out.log(INF) << mx << std::endl;
-    doub2png("data/sinogram.png", f_polar_proj_r);
-    auto f_tomogram_r = abs(f_tomogram);
-    out.log(INF) << "saving f_tomogram" << std::endl;
-    mx = f_tomogram_r.max();
-    mn = f_tomogram_r.min();
-    f_tomogram_r += -mn;
-    f_tomogram_r *= 1/(mx-mn);
-    out.log(INF) << mx << std::endl;
-    doub2png("data/f_tomogram.png", f_tomogram_r);
-    out.log(INF) << "saving tomogram" << std::endl;
-    mx = tomogram.max();
-    tomogram *= 1/mx;
-    out.log(INF) << mx << std::endl;
+    
+    
+    for(int i = 0; i< height; i++){
+    for(int j = 0; j< width; j++){
+        int ic = (i+height/2)%height;
+        int jc = (j+width/2)%width;
+        tomogram[i][j] = 2.0*std::abs(f_tomogram[ic][jc]);
+    }
+    }
+    
+    out.log(INF) << "saving" << std::endl;
+    field<double> real_field;
+    real_field = abs(f_polar_proj);
+    doub2png("data/sinogram_abs.png", real_field, SCALE);
+    real_field = arg(f_polar_proj);
+    doub2png("data/sinogram_arg.png", real_field, SCALE_ZERO);
+    
+    real_field = abs(f_tomogram);
+    doub2png("data/f_tomogram_abs.png", real_field, SCALE);
+    real_field = arg(f_tomogram);
+    doub2png("data/f_tomogram_arg.png", real_field, SCALE_ZERO);
+    
+    out.log(INF) << tomogram.max() << std::endl;
     doub2png("data/tomogram.png", tomogram);
  
     return 1;
 }
 
-int recon_sirt(const field<double>& phantom, field<double>& tomogram){
+int recon_art(const field<double>& phantom, field<double>& tomogram){
     
     tomogram.fill(0.0);
     const double angle_step = 2.0*pi/PROJECTIONS; 
@@ -341,8 +333,8 @@ int main() {
         
     // recon_bp(phantom, tomogram);
     // recon_fbp(phantom, tomogram);
-    // recon_dfi(phantom, tomogram);
-    recon_sirt(phantom, tomogram);
+    recon_dfi(phantom, tomogram);
+    // recon_art(phantom, tomogram);
     
     tomogram.clamp(0.0,1.0);
     out.log(INF) << "saving tomogram" << std::endl;
