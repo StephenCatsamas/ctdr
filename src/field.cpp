@@ -96,25 +96,31 @@ void write_pixle(std::vector<unsigned char>& image, int p){
 }
 
 //saves double field to png
-void doub2png(const char* fp, const field<double>& f){
+void doub2png(const char* fp, const field<double>& f, png_out_mode mode){
     auto image = std::vector<unsigned char>();
     int h = f.height;
     int w = f.width;
 
-    // double bnd = std::max(abs(f.min()), abs(f.max()));
+    double mn = f.min();
+    double mx = f.max();
 
-    // double mn = -bnd;
-    // double mx = bnd;
-
+    uint8_t pixv;
     for(auto v : f.data){
-        // uint8_t pixv = (v - mn)/(mx - mn)*255;
-        uint8_t pixv = v*255;
-        write_pixle(image,PACK(pixv,255-pixv,pixv,0xFF));
-        // if(v > 0){
-            // write_pixle(image,PACK(0xFF,0,0,0xFF));
-        // }else{
-            // write_pixle(image,PACK(0x00,0xFF,0xFF,0xFF));
-        // }
+        switch (mode){
+            case RAW:
+                pixv = v*255;
+                write_pixle(image,PACK(pixv,pixv,pixv,0xFF));
+                break;
+            case SCALE:
+                pixv = (v - mn)/(mx - mn)*255;
+                write_pixle(image,PACK(pixv,255-pixv,pixv,0xFF));
+                break;
+            case SCALE_ZERO:
+                pixv = (v/(std::max(abs(mx),abs(mn)))+0.5)*255;
+                write_pixle(image,PACK(pixv,255-pixv,pixv,0xFF));
+                break;
+        }
+        
     }
 
     encode_png(fp, image, w,h);

@@ -10,6 +10,12 @@ enum png_mode{
     RGBA,
 };
 
+enum png_out_mode{
+    RAW,
+    SCALE,
+    SCALE_ZERO,
+};
+
 enum print_mode{
     DBG,
     INF,

@@ -15,7 +15,7 @@ using namespace pocketfft;
 
 double pi = std::numbers::pi_v<double>;
 
-#define PROJECTIONS (512)
+#define PROJECTIONS (256)
 
 int project(const field<double>& phantom, const double angle, std::vector<double>& projection){
     
@@ -253,6 +253,38 @@ int recon_dfi(const field<double>& phantom, field<double>& tomogram){
     return 1;
 }
 
+int recon_sirt(const field<double>& phantom, field<double>& tomogram){
+    
+    tomogram.fill(0.0);
+    const double angle_step = 2.0*pi/PROJECTIONS; 
+    auto tomo_delta = field<double>(tomogram.height,tomogram.width);
+    std::vector<double> p;
+    std::vector<double> q;
+
+    for(int i = 0; i < PROJECTIONS; i++){
+        double angle = (1500450271 * i)%PROJECTIONS * angle_step;//use a big prime to do the correction in a semi random order 
+            
+        project(phantom, angle, p);
+        project(tomogram, angle, q);
+        
+        auto correction = p-q;
+        back_project(correction, angle, tomo_delta);
+        
+        
+        
+        tomogram += tomo_delta*(0.8/(tomo_delta.height));
+        
+        // char fp[128];
+        // sprintf(fp, "data/del/%d.png", i);
+        // doub2png(fp, tomo_delta, SCALE_ZERO);
+        // sprintf(fp, "data/part/%d.png", i);
+        // doub2png(fp, tomogram, SCALE);
+    
+    
+    }
+    return 1;
+    
+}
 
 int fft_2d_test(){
     auto r = field<double>(128,128, 0.0);
@@ -309,14 +341,13 @@ int main() {
         
     // recon_bp(phantom, tomogram);
     // recon_fbp(phantom, tomogram);
-    recon_dfi(phantom, tomogram);
+    // recon_dfi(phantom, tomogram);
+    recon_sirt(phantom, tomogram);
     
-    double tm_mx = tomogram.max();
-    out.log(INF) << tm_mx << std::endl;
     tomogram.clamp(0.0,1.0);
-    
     out.log(INF) << "saving tomogram" << std::endl;
     doub2png("data/tomogram.png", tomogram);
+    
 
     return 0;
 }
