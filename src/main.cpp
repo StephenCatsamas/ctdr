@@ -10,7 +10,7 @@
 #include "util.h"
 #include "recon.h"
 
-const int projections = 256;
+const int projections = 480;
 
 int main() {
     out.log(INF) << "ctdr" << std::endl;
