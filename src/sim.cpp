@@ -17,7 +17,7 @@ int project_stem(const field<double>& phantom, const double angle, std::vector<d
     
     for (int j = 0; j< oriented.width; j++){
     for (int i = 0; i< oriented.height; i++){
-        swith(i_mode){
+        switch(i_mode){
             case INTENSITY:
                 projection[j] += exp(-oriented[i][j]);
                 break;
@@ -33,11 +33,11 @@ int project_stem(const field<double>& phantom, const double angle, std::vector<d
 }
 
 int project_intensity(const field<double>& phantom, const double angle, std::vector<double>& projection){
-    project_stem(phantom, angle, projection, INTENSITY);
+    return project_stem(phantom, angle, projection, INTENSITY);
 }
 
 int project_attenuation(const field<double>& phantom, const double angle, std::vector<double>& projection){
-    project_stem(phantom, angle, projection, INTENSITY);
+    return project_stem(phantom, angle, projection, INTENSITY);
 }
 
 int sinogram_base(const field<double>& phantom, int projections, field<double>& sinogram, integrand i_mode){
@@ -57,9 +57,9 @@ int sinogram_base(const field<double>& phantom, int projections, field<double>& 
 }
 
 int sinogram_intensity(const field<double>& phantom, int projections,field<double>& sinogram){
-    sinogram_base(phatom, projections, sinogram, INTENSITY);
+    return sinogram_base(phantom, projections, sinogram, INTENSITY);
 }
 
 int sinogram_attenuation(const field<double>& phantom, int projections,field<double>& sinogram){
-    sinogram_base(phatom, projections, sinogram, ATTENUATION);
+    return sinogram_base(phantom, projections, sinogram, ATTENUATION);
 }
