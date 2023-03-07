@@ -7,8 +7,8 @@ OPLEVEL = /O2
 # OPLEVEL = /Od /DEBUG
 CFLAGS = /I $(INC_DIR) /std:c++20 $(OPLEVEL) /Zi /EHsc
 
-MAIN_CFLAGS = $(CFLAGS) /Fe.\target\ 
-LIB_CFLAGS =  $(CFLAGS) /Fe.\target\ /LD
+MAIN_CFLAGS = $(CFLAGS) /Fo$(OBJ_DIR)\ /Fe.\target\ 
+LIB_CFLAGS =  $(CFLAGS) /Fo$(OBJ_DIR)\ /Fe.\target\ /LD
 
 MAIN_SOURCE = src\main.cpp 
 LIB_SOURCE = src\lib.cpp 
@@ -47,7 +47,7 @@ $(TGT_DIR)\lib: $(LIB_SOURCE) inc\lib.h  $(TGT_DIR)\obj
 
 $(LODEPNG_DIR)\target\lodepng.obj: $(LODEPNG_DIR)\lodepng.cpp $(LODEPNG_DIR)\lodepng.h
 	if not exist "$(LODEPNG_DIR)\target\" mkdir $(LODEPNG_DIR)\target
-	$(CC) /c $(CFLAGS) /Fo$(LODEPNG_DIR)\target\ $(LODEPNG_DIR)\lodepng.cpp
+	$(CC) /c $(CFLAGS) /Fo$(LODEPNG_DIR)\target\ \target\ $(LODEPNG_DIR)\lodepng.cpp
 
 # $(TGT_DIR)\copy: $(TGT_DIR)\lib
 #	copy target\lib.dll app\lib.dll

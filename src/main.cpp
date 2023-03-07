@@ -19,13 +19,24 @@ int main() {
     out.log(INF) << "loading phantom" << std::endl;
     
     auto phantom = png2doub("data/phantom.png", R_ONLY);
-        
+
+    phantom.save("data/phantom.fld");
+
+
+    auto load = field<double>::load("data/phantom.fld");
+    doub2png("data/load.png", load);
+
+    auto diff = phantom + -1.0*load;
+    doub2png("data/diff.png", diff);
+
     // auto tomogram = field<double>(phantom.height, phantom.width);
     auto sinogram = field<double>(phantom.height, phantom.width);
     
     sinogram_intensity(phantom, projections, sinogram);
 
     doub2png("data/sinogram.png", sinogram);
+
+
 
     // std::chrono::steady_clock::time_point tik,tok;
     
