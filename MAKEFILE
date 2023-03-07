@@ -12,10 +12,13 @@ LIB_CFLAGS =  $(CFLAGS) /LD
 MAIN_SOURCE = src\main.cpp 
 LIB_SOURCE = src\lib.cpp 
 
-OBJ_FILES = $(OBJ_DIR)\lodepng.obj $(OBJ_DIR)\util.obj $(OBJ_DIR)\field.obj $(OBJ_DIR)\recon.obj
+OBJ_FILES = $(OBJ_DIR)\lodepng.obj $(OBJ_DIR)\util.obj $(OBJ_DIR)\field.obj $(OBJ_DIR)\recon.obj $(OBJ_DIR)\sim.obj
 
 default: all
 all: $(TGT_DIR)\main $(TGT_DIR)\lib
+
+$(OBJ_DIR)\sim.obj: src\sim.cpp inc\sim.h
+	$(CC) /c $(CFLAGS) src\sim.cpp
 
 $(OBJ_DIR)\recon.obj: src\recon.cpp inc\recon.h
 	$(CC) /c $(CFLAGS) src\recon.cpp
