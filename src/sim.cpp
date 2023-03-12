@@ -3,18 +3,10 @@
 
 #include <random>
 
-enum integrand{
-    INTENSITY,
-    ATTENUATION,
-};
+int project_sim(const field<double>& phantom, const scan_prop scan, const double angle, std::vector<double>& projection){
 
-int project_stem(const field<double>& phantom, const double angle, std::vector<double>& projection, integrand i_mode){
-    
-    int seed = 42;
-    std::default_random_engine generator(seed);
+    std::default_random_engine generator(scan.seed);
     std::poisson_distribution<int> poission(1);
-    int I0 = 1E3; //photons
-    double proj_att_sf = 1.0/phantom.height;//attenuation factor to make sure that projections dont get toooo small in the exponent we will limit to 1/e.
 
     auto oriented = phantom;
     
@@ -27,9 +19,13 @@ int project_stem(const field<double>& phantom, const double angle, std::vector<d
         for (int i = 0; i< oriented.height; i++){
             projection[j] += oriented[i][j];
         }
-        switch(i_mode){
+        switch(scan.proj_int){
             case INTENSITY:
-                projection[j] = std::round(I0*exp(-projection[j]*proj_att_sf));
+                if(scan.noise_quanisation){
+                    projection[j] = std::round(scan.I0*exp(-projection[j]*scan.att_sf));
+                }else{
+                    projection[j] = scan.I0*exp(-projection[j]*scan.att_sf);
+                }
                 break;
             case ATTENUATION:
                 break;
@@ -40,23 +36,17 @@ int project_stem(const field<double>& phantom, const double angle, std::vector<d
     return 1;
 }
 
-int project_intensity(const field<double>& phantom, const double angle, std::vector<double>& projection){
-    return project_stem(phantom, angle, projection, INTENSITY);
-}
 
-int project_attenuation(const field<double>& phantom, const double angle, std::vector<double>& projection){
-    return project_stem(phantom, angle, projection, ATTENUATION);
-}
 
-int sinogram_base(const field<double>& phantom, int projections, field<double>& sinogram, integrand i_mode){
-    double angle_step = 2*pi/projections;
+int sinogram_sim(const field<double>& phantom, const scan_prop scan, field<double>& sinogram){
+    double angle_step = 2*pi/scan.projections;
     
-    sinogram = field<double>(projections, phantom.width, 0.0);
+    sinogram = field<double>(scan.projections, phantom.width, 0.0);
 
     auto projection = std::vector<double>(phantom.width);
-    for(int i = 0; i < projections; i++){
+    for(int i = 0; i < scan.projections; i++){
         double angle = i*angle_step;
-        project_stem(phantom, angle, projection, i_mode);
+        project_sim(phantom, scan, angle, projection);
         
         std::copy(projection.begin(), projection.end(), 
                   sinogram.data.begin()+(sinogram.width*i));
@@ -65,10 +55,3 @@ int sinogram_base(const field<double>& phantom, int projections, field<double>& 
     return 1;
 }
 
-int sinogram_intensity(const field<double>& phantom, int projections,field<double>& sinogram){
-    return sinogram_base(phantom, projections, sinogram, INTENSITY);
-}
-
-int sinogram_attenuation(const field<double>& phantom, int projections,field<double>& sinogram){
-    return sinogram_base(phantom, projections, sinogram, ATTENUATION);
-}

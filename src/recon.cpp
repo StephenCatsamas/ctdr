@@ -7,11 +7,11 @@
 using namespace pocketfft;
 
 
-int intensity2attentuation(field<double>& sinogram){
+int intensity2attentuation(field<double>& sinogram, const scan_prop scan){
     for (int j = 0; j< sinogram.width; j++){
     for (int i = 0; i< sinogram.height; i++){
 
-        sinogram[i][j] = -sinogram.width*std::log(sinogram[i][j]/1E3);
+        sinogram[i][j] = -std::log(sinogram[i][j]/scan.I0)/scan.att_sf;
     }
     }
     return 1;
@@ -64,19 +64,19 @@ int back_project(const std::vector<double>& projection, double angle, field<doub
 
 
 
-int recon_bp(const field<double>& sinogram, const int n_proj, field<double>& tomogram){
+int recon_bp(const field<double>& sinogram, const scan_prop scan, field<double>& tomogram){
     
-    const double angle_step = 2.0*pi/n_proj;
+    const double angle_step = 2.0*pi/scan.projections;
     
     tomogram = field<double>(sinogram.width, sinogram.width, 0.0);
     auto projection = std::vector<double>(sinogram.width);
     auto back_projection = field<double>(sinogram.width,sinogram.width);
-    for(int i = 0; i < n_proj; i++){
+    for(int i = 0; i < scan.projections; i++){
         double angle = i * angle_step;
         
         sinogram2projection(sinogram,angle,projection);
         
-        projection *= 8.0*(0.5/(n_proj*back_projection.height));
+        projection *= 8.0*(0.5/(scan.projections*back_projection.height));
         back_project(projection, angle, back_projection);
 
         tomogram += back_projection ;
@@ -85,9 +85,9 @@ int recon_bp(const field<double>& sinogram, const int n_proj, field<double>& tom
     return 1; 
 }
 
-int recon_fbp(const field<double>& sinogram, const int n_proj, field<double>& tomogram){
+int recon_fbp(const field<double>& sinogram, const scan_prop scan, field<double>& tomogram){
     
-    const double angle_step = 2.0*pi/n_proj;   
+    const double angle_step = 2.0*pi/scan.projections;   
     
     tomogram = field<double>(sinogram.width, sinogram.width, 0.0);
     std::vector<double> projection;
@@ -136,7 +136,7 @@ int recon_fbp(const field<double>& sinogram, const int n_proj, field<double>& to
         //unpad projection
         projection.resize(back_projection.width);
         //end fft stuff    
-        projection *= (0.5/(n_proj*back_projection.height));        
+        projection *= (0.5/(scan.projections*back_projection.height));        
         back_project(projection, angle, back_projection);
         tomogram += back_projection;
        
@@ -145,15 +145,15 @@ int recon_fbp(const field<double>& sinogram, const int n_proj, field<double>& to
 }
 
 
-int recon_dfi(const field<double>& sinogram, const int n_proj, const int pf, field<double>& tomogram){
+int recon_dfi(const field<double>& sinogram, const scan_prop scan, const int pf, field<double>& tomogram){
     
-    const double angle_step = 2.0*pi/n_proj;   
-    auto f_polar_proj = field<std::complex<double>>(n_proj,pf*tomogram.width/2 + 1);
+    const double angle_step = 2.0*pi/scan.projections;   
+    auto f_polar_proj = field<std::complex<double>>(scan.projections,pf*tomogram.width/2 + 1);
     auto f_tomogram = field<std::complex<double>>(tomogram.height,tomogram.width, 0.0);
     std::vector<double> projection;
     tomogram = field<double>(sinogram.width, sinogram.width, 0.0);
     //polar fouier space
-    for(int i = 0; i < n_proj; i++){
+    for(int i = 0; i < scan.projections; i++){
         double angle = i * angle_step;
         // out.log(INF) << angle << std::endl;
         
@@ -225,18 +225,18 @@ int recon_dfi(const field<double>& sinogram, const int n_proj, const int pf, fie
     return 1;
 }
 
-int recon_art(const field<double>& sinogram, const int n_proj, field<double>& tomogram){
+int recon_art(const field<double>& sinogram, const scan_prop scan, field<double>& tomogram){
     
     tomogram = field<double>(sinogram.width, sinogram.width, 0.0);
-    const double angle_step = 2.0*pi/n_proj; 
+    const double angle_step = 2.0*pi/scan.projections; 
     auto tomo_delta = field<double>(tomogram.height,tomogram.width);
     std::vector<double> p;
     std::vector<double> q;
 
-    for(int i = 0; i < n_proj; i++){
+    for(int i = 0; i < scan.projections; i++){
         size_t memememe = sizeof(i);
-        size_t fhfhfh = sizeof(n_proj);
-        double angle = (1500450271LL * i)%n_proj * angle_step;//use a big prime to do the correction in a semi random order 
+        size_t fhfhfh = sizeof(scan.projections);
+        double angle = (1500450271LL * i)%scan.projections * angle_step;//use a big prime to do the correction in a semi random order 
             
         sinogram2projection(sinogram,angle,p);
         project(tomogram, angle, q);

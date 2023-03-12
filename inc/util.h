@@ -10,6 +10,20 @@
 
 extern double pi;
 
+enum proj_integrand{
+    INTENSITY,
+    ATTENUATION,
+};
+
+struct scan_prop{
+    proj_integrand proj_int;
+    int seed;
+    int I0;//photon flux (photons/pixle)
+    int projections;
+    double att_sf;//units for attenuation (/pixle) normally you should set this to 1/resolution to get a minium intensity of I0/e.
+    bool noise_quanisation;
+};
+
 enum png_mode{
     R_ONLY,
     RGBA,

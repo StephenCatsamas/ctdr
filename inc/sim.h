@@ -4,12 +4,13 @@
 #include "util.h"
 #include "field.h"
 
+int sinogram_sim(const field<double>& phantom, const scan_prop scan, field<double>& sinogram);
 
-int sinogram_intensity(const field<double>& phantom, int projections, field<double>& sinogram);
-int sinogram_attenuation(const field<double>& phantom, int projections, field<double>& sinogram);
+// int sinogram_intensity(const field<double>& phantom, int projections, field<double>& sinogram);
+// int sinogram_attenuation(const field<double>& phantom, int projections, field<double>& sinogram);
 
-int project_intensity(const field<double>& phantom, const double angle, std::vector<double>& projection);
-int project_attenuation(const field<double>& phantom, const double angle, std::vector<double>& projection);
+// int project_intensity(const field<double>& phantom, const double angle, std::vector<double>& projection);
+// int project_attenuation(const field<double>& phantom, const double angle, std::vector<double>& projection);
 
 
 

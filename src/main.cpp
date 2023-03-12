@@ -11,42 +11,48 @@
 #include "recon.h"
 #include "sim.h"
 
-const int projections = 512;
+ scan_prop scan = {
+        INTENSITY,//projection mode
+        42,       //random seed
+        10'0,   //I0
+        512,      //projections
+        1.0/256.0,//att_sf
+        true,//quanisation noise
+    };
 
 int main() {
     out.log(INF) << "================ ctdr ===============" << std::endl;
 
     {  
-    out.log(INF) << "loading phantom" << std::endl;
+    out.log(INF) << "SIMULATING PHANTOM..." << std::endl;
     
     auto phantom = png2doub("data/phantom.png", R_ONLY);
 
-    
     field<double> sinogram;    
-    sinogram_intensity(phantom, projections, sinogram);
-    // sinogram_attenuation(phantom, projections, sinogram);
+    sinogram_sim(phantom, scan, sinogram);
 
     doub2png("data/sinogram.png", sinogram, SCALE_ZERO);
     sinogram.save("data/sinogram.fld");
     }
+
     {
+    out.log(INF) << "RECONSTRUCTING PHANTOM..." << std::endl;
     field<double> tomogram;
     field<double> sinogram = field<double>::load("data/sinogram.fld");
 
-    intensity2attentuation(sinogram);
-    doub2png("data/sinogram_att.png", sinogram, SCALE_ZERO);
+    intensity2attentuation(sinogram, scan);
 
     std::chrono::steady_clock::time_point tik,tok;
     
     tik = std::chrono::high_resolution_clock::now();
-    recon_bp(sinogram, projections, tomogram);
+    recon_bp(sinogram, scan, tomogram);
     tok = std::chrono::high_resolution_clock::now();
     
     out.log(INF) << " bp: " << std::chrono::duration_cast<std::chrono::milliseconds>(tok - tik) << std::endl;
     doub2png("data/tomogram_bp.png", tomogram);
     
     tik = std::chrono::high_resolution_clock::now();
-    recon_fbp(sinogram, projections, tomogram);
+    recon_fbp(sinogram, scan, tomogram);
     tok = std::chrono::high_resolution_clock::now();
 
     out.log(INF) << "fbp: " << std::chrono::duration_cast<std::chrono::milliseconds>(tok - tik) << std::endl;
@@ -54,14 +60,14 @@ int main() {
     
     const int padding_factor = 8.0;
     tik = std::chrono::high_resolution_clock::now();
-    recon_dfi(sinogram, projections, padding_factor, tomogram);
+    recon_dfi(sinogram, scan, padding_factor, tomogram);
     tok = std::chrono::high_resolution_clock::now();
     
     out.log(INF) << "fdi: " << std::chrono::duration_cast<std::chrono::milliseconds>(tok - tik) << std::endl;
     doub2png("data/tomogram_dfi.png", tomogram);
     
     tik = std::chrono::high_resolution_clock::now();
-    recon_art(sinogram, projections, tomogram);
+    recon_art(sinogram, scan, tomogram);
     tok = std::chrono::high_resolution_clock::now();
     
     out.log(INF) << "art: " << std::chrono::duration_cast<std::chrono::milliseconds>(tok - tik) << std::endl;
