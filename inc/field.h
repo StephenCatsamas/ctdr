@@ -4,6 +4,7 @@
 #include "util.h"
 #include <vector>
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <algorithm>
 #include <complex>
@@ -12,8 +13,8 @@ template<typename T>
 class field{
     public:
         std::vector<T> data;
-        int width; 
         int height;
+        int width; 
     
         field(int h = 0, int w = 0){
             int rows = height = h;
@@ -98,6 +99,42 @@ class field{
             return std::min_element(data.begin(), data.end())[0];
         }
 
+        int save(const char* fp){
+            std::ofstream wf(fp, std::ios::out |std::ios::binary);
+            if(!wf){
+                return 1;
+            }
+            wf.write((char *) &height,sizeof(int));
+            wf.write((char *) &width,sizeof(int));
+            wf.write((char *) data.data(),data.size()*sizeof(T));
+            
+            wf.close();
+            if(!wf.good()){
+                return 1;
+            }
+        return 0;
+        }
+
+        static field<T> load(const char* fp){
+            auto fld = field<T>();
+
+            std::ifstream rf(fp, std::ios::in | std::ios::binary);
+            if(!rf) {
+                // return 1;
+            }
+
+            rf.read((char *) &(fld.height), sizeof(int));
+            rf.read((char *) &(fld.width), sizeof(int));
+            fld.data.resize(fld.height*fld.width);
+            rf.read((char *) fld.data.data(), fld.data.size()*sizeof(T));
+
+            rf.close();
+            if(!rf.good()) {
+                // return 1;
+            }
+            return fld;
+        }
+
         // //save to csv
         // void save(const char* fp, char delimiter = ','){
             // std::ofstream outfile;
@@ -118,33 +155,33 @@ class field{
             // outfile.close();
         // }
         ///load from csv
-        static field<T> load(const char* fp){
-            auto fld = field<T>();
+        // static field<T> load(const char* fp){
+        //     auto fld = field<T>();
 
-            std::ifstream infile;
-            infile.open(fp, std::ifstream::binary);
+        //     std::ifstream infile;
+        //     infile.open(fp, std::ifstream::binary);
 
-            if(!infile.is_open()){exit(5);}
+        //     if(!infile.is_open()){exit(5);}
             
-            for(;;){
-                auto row = std::vector<T>();
-                for(;;){
-                    T val;
-                    char delim;
+        //     for(;;){
+        //         auto row = std::vector<T>();
+        //         for(;;){
+        //             T val;
+        //             char delim;
 
-                    infile >> val;
-                    infile.get(delim);
-                    row.push_back(val);
-                    if (infile.eof()){break;}
-                    if (delim == '\n' || delim == '\r'){break;}
-                }
-                fld.v_stack(row);
-                if (infile.eof()){break;}
-            }
+        //             infile >> val;
+        //             infile.get(delim);
+        //             row.push_back(val);
+        //             if (infile.eof()){break;}
+        //             if (delim == '\n' || delim == '\r'){break;}
+        //         }
+        //         fld.v_stack(row);
+        //         if (infile.eof()){break;}
+        //     }
 
-            infile.close();
-            return fld;
-        }
+        //     infile.close();
+        //     return fld;
+        // }
         
         friend std::ostream& operator<< (std::ostream& os, field<T>& f){
             char delimiter = ',';

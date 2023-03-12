@@ -95,6 +95,8 @@ void write_pixle(std::vector<unsigned char>& image, int p){
     image.push_back(A);
 }
 
+
+
 //saves double field to png
 void doub2png(const char* fp, const field<double>& f, png_out_mode mode){
     auto image = std::vector<unsigned char>();
