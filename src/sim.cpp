@@ -3,10 +3,7 @@
 
 #include <random>
 
-int project_sim(const field<double>& phantom, const scan_prop scan, const double angle, std::vector<double>& projection){
-
-    std::default_random_engine generator(scan.seed);
-    std::poisson_distribution<int> poission(1);
+int project_sim(const field<double>& phantom, const scan_prop& scan, const double angle, std::default_random_engine& rng, std::vector<double>& projection){
 
     auto oriented = phantom;
     
@@ -19,13 +16,18 @@ int project_sim(const field<double>& phantom, const scan_prop scan, const double
         for (int i = 0; i< oriented.height; i++){
             projection[j] += oriented[i][j];
         }
+        double photons;
         switch(scan.proj_int){
             case INTENSITY:
+                photons = scan.I0*exp(-projection[j]*scan.att_sf);
                 if(scan.noise_quanisation){
-                    projection[j] = std::round(scan.I0*exp(-projection[j]*scan.att_sf));
-                }else{
-                    projection[j] = scan.I0*exp(-projection[j]*scan.att_sf);
+                    photons = std::round(photons);
                 }
+                if(scan.noise_poisson){
+                    std::poisson_distribution<int> poisson(photons);
+                    photons = poisson(rng);
+                }
+                projection[j] = photons;
                 break;
             case ATTENUATION:
                 break;
@@ -38,15 +40,17 @@ int project_sim(const field<double>& phantom, const scan_prop scan, const double
 
 
 
-int sinogram_sim(const field<double>& phantom, const scan_prop scan, field<double>& sinogram){
+int sinogram_sim(const field<double>& phantom, const scan_prop& scan, field<double>& sinogram){
     double angle_step = 2*pi/scan.projections;
-    
+
     sinogram = field<double>(scan.projections, phantom.width, 0.0);
+
+    std::default_random_engine rng;//random engine
 
     auto projection = std::vector<double>(phantom.width);
     for(int i = 0; i < scan.projections; i++){
         double angle = i*angle_step;
-        project_sim(phantom, scan, angle, projection);
+        project_sim(phantom, scan, angle, rng, projection);
         
         std::copy(projection.begin(), projection.end(), 
                   sinogram.data.begin()+(sinogram.width*i));

@@ -4,16 +4,16 @@
 #include "util.h"
 #include "field.h"
 
-int intensity2attentuation(field<double>& sinogram, const scan_prop scan);
+int intensity2attentuation(field<double>& sinogram, const scan_prop& scan);
 
 int project(const field<double>& phantom, const double angle, std::vector<double>& projection);
 int back_project(const std::vector<double>& projection, double angle, field<double>& back_projection);
 
 
-int recon_bp(const field<double>& sinogram, const scan_prop scan, field<double>& tomogram);
-int recon_fbp(const field<double>& sinogram, const scan_prop scan, field<double>& tomogram);
-int recon_dfi(const field<double>& sinogram, const scan_prop scan, const int pf, field<double>& tomogram);
-int recon_art(const field<double>& sinogram, const scan_prop scan, field<double>& tomogram);
+int recon_bp(const field<double>& sinogram, const scan_prop& scan, field<double>& tomogram);
+int recon_fbp(const field<double>& sinogram, const scan_prop& scan, field<double>& tomogram);
+int recon_dfi(const field<double>& sinogram, const scan_prop& scan, const int pf, field<double>& tomogram);
+int recon_art(const field<double>& sinogram, const scan_prop& scan, field<double>& tomogram);
 
 int proj2png(char* fp, std::vector<double>& projection);
 

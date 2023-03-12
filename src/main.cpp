@@ -14,11 +14,14 @@
  scan_prop scan = {
         INTENSITY,//projection mode
         42,       //random seed
-        10'0,   //I0
+        10'000,   //I0
         512,      //projections
         1.0/256.0,//att_sf
         true,//quanisation noise
+        true,
     };
+
+std::chrono::steady_clock::time_point tik,tok;
 
 int main() {
     out.log(INF) << "================ ctdr ===============" << std::endl;
@@ -28,11 +31,18 @@ int main() {
     
     auto phantom = png2doub("data/phantom.png", R_ONLY);
 
-    field<double> sinogram;    
-    sinogram_sim(phantom, scan, sinogram);
+    field<double> sinogram;  
 
+    tik = std::chrono::high_resolution_clock::now();
+    sinogram_sim(phantom, scan, sinogram);
+    tok = std::chrono::high_resolution_clock::now();
+
+    out.log(INF) << " sim: " << std::chrono::duration_cast<std::chrono::milliseconds>(tok - tik) << std::endl;
     doub2png("data/sinogram.png", sinogram, SCALE_ZERO);
     sinogram.save("data/sinogram.fld");
+
+
+
     }
 
     {
@@ -42,7 +52,7 @@ int main() {
 
     intensity2attentuation(sinogram, scan);
 
-    std::chrono::steady_clock::time_point tik,tok;
+    
     
     tik = std::chrono::high_resolution_clock::now();
     recon_bp(sinogram, scan, tomogram);

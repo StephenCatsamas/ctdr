@@ -7,7 +7,7 @@
 using namespace pocketfft;
 
 
-int intensity2attentuation(field<double>& sinogram, const scan_prop scan){
+int intensity2attentuation(field<double>& sinogram, const scan_prop& scan){
     for (int j = 0; j< sinogram.width; j++){
     for (int i = 0; i< sinogram.height; i++){
 
@@ -64,7 +64,7 @@ int back_project(const std::vector<double>& projection, double angle, field<doub
 
 
 
-int recon_bp(const field<double>& sinogram, const scan_prop scan, field<double>& tomogram){
+int recon_bp(const field<double>& sinogram, const scan_prop& scan, field<double>& tomogram){
     
     const double angle_step = 2.0*pi/scan.projections;
     
@@ -85,7 +85,7 @@ int recon_bp(const field<double>& sinogram, const scan_prop scan, field<double>&
     return 1; 
 }
 
-int recon_fbp(const field<double>& sinogram, const scan_prop scan, field<double>& tomogram){
+int recon_fbp(const field<double>& sinogram, const scan_prop& scan, field<double>& tomogram){
     
     const double angle_step = 2.0*pi/scan.projections;   
     
@@ -145,7 +145,7 @@ int recon_fbp(const field<double>& sinogram, const scan_prop scan, field<double>
 }
 
 
-int recon_dfi(const field<double>& sinogram, const scan_prop scan, const int pf, field<double>& tomogram){
+int recon_dfi(const field<double>& sinogram, const scan_prop& scan, const int pf, field<double>& tomogram){
     
     const double angle_step = 2.0*pi/scan.projections;   
     auto f_polar_proj = field<std::complex<double>>(scan.projections,pf*tomogram.width/2 + 1);
@@ -225,7 +225,7 @@ int recon_dfi(const field<double>& sinogram, const scan_prop scan, const int pf,
     return 1;
 }
 
-int recon_art(const field<double>& sinogram, const scan_prop scan, field<double>& tomogram){
+int recon_art(const field<double>& sinogram, const scan_prop& scan, field<double>& tomogram){
     
     tomogram = field<double>(sinogram.width, sinogram.width, 0.0);
     const double angle_step = 2.0*pi/scan.projections; 

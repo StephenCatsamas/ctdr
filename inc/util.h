@@ -4,6 +4,7 @@
 #include<iostream>
 #include<tuple>
 #include<vector>
+#include<random>
 
 #include "vec.h"
 
@@ -22,6 +23,7 @@ struct scan_prop{
     int projections;
     double att_sf;//units for attenuation (/pixle) normally you should set this to 1/resolution to get a minium intensity of I0/e.
     bool noise_quanisation;
+    bool noise_poisson;
 };
 
 enum png_mode{
