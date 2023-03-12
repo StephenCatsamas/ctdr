@@ -11,7 +11,7 @@ int intensity2attentuation(field<double>& sinogram){
     for (int j = 0; j< sinogram.width; j++){
     for (int i = 0; i< sinogram.height; i++){
 
-        sinogram[i][j] = -std::log(sinogram[i][j]);
+        sinogram[i][j] = -sinogram.width*std::log(sinogram[i][j]/1E3);
     }
     }
     return 1;

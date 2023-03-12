@@ -1,6 +1,8 @@
 
 #include "sim.h"
 
+#include <random>
+
 enum integrand{
     INTENSITY,
     ATTENUATION,
@@ -8,6 +10,12 @@ enum integrand{
 
 int project_stem(const field<double>& phantom, const double angle, std::vector<double>& projection, integrand i_mode){
     
+    int seed = 42;
+    std::default_random_engine generator(seed);
+    std::poisson_distribution<int> poission(1);
+    int I0 = 1E3; //photons
+    double proj_att_sf = 1.0/phantom.height;//attenuation factor to make sure that projections dont get toooo small in the exponent we will limit to 1/e.
+
     auto oriented = phantom;
     
     oriented.rot(angle);
@@ -21,7 +29,7 @@ int project_stem(const field<double>& phantom, const double angle, std::vector<d
         }
         switch(i_mode){
             case INTENSITY:
-                projection[j] = exp(-projection[j]);
+                projection[j] = std::round(I0*exp(-projection[j]*proj_att_sf));
                 break;
             case ATTENUATION:
                 break;
