@@ -23,15 +23,18 @@ int main() {
 
     
     field<double> sinogram;    
-    // sinogram_intensity(phantom, projections, sinogram);
-    sinogram_attenuation(phantom, projections, sinogram);
+    sinogram_intensity(phantom, projections, sinogram);
+    // sinogram_attenuation(phantom, projections, sinogram);
 
     doub2png("data/sinogram.png", sinogram, SCALE_ZERO);
     sinogram.save("data/sinogram.fld");
     }
-
+    {
     field<double> tomogram;
     field<double> sinogram = field<double>::load("data/sinogram.fld");
+
+    intensity2attentuation(sinogram);
+    doub2png("data/sinogram_att.png", sinogram, SCALE_ZERO);
 
     std::chrono::steady_clock::time_point tik,tok;
     
@@ -63,6 +66,6 @@ int main() {
     
     out.log(INF) << "art: " << std::chrono::duration_cast<std::chrono::milliseconds>(tok - tik) << std::endl;
     doub2png("data/tomogram_art.png", tomogram);
-    
+    }
     return 0;
 }

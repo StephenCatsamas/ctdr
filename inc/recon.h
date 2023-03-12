@@ -4,6 +4,8 @@
 #include "util.h"
 #include "field.h"
 
+int intensity2attentuation(field<double>& sinogram);
+
 int project(const field<double>& phantom, const double angle, std::vector<double>& projection);
 int back_project(const std::vector<double>& projection, double angle, field<double>& back_projection);
 

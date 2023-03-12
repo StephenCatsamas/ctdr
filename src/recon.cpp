@@ -6,6 +6,17 @@
 
 using namespace pocketfft;
 
+
+int intensity2attentuation(field<double>& sinogram){
+    for (int j = 0; j< sinogram.width; j++){
+    for (int i = 0; i< sinogram.height; i++){
+
+        sinogram[i][j] = -std::log(sinogram[i][j]);
+    }
+    }
+    return 1;
+}
+
 int sinogram2projection(const field<double>& sinogram, const double angle, std::vector<double>& projection){
     
     projection.resize(sinogram.width);  

@@ -16,18 +16,18 @@ int project_stem(const field<double>& phantom, const double angle, std::vector<d
     std::fill(projection.begin(), projection.end(), 0.0);
     
     for (int j = 0; j< oriented.width; j++){
-    for (int i = 0; i< oriented.height; i++){
+        for (int i = 0; i< oriented.height; i++){
+            projection[j] += oriented[i][j];
+        }
         switch(i_mode){
             case INTENSITY:
-                projection[j] += exp(-oriented[i][j]);
+                projection[j] = exp(-projection[j]);
                 break;
             case ATTENUATION:
-                projection[j] += oriented[i][j];
                 break;
-            
         }
     }
-    }
+    
     
     return 1;
 }
