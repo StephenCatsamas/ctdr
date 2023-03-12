@@ -4,9 +4,21 @@
 #include "field.h"
 #include "pocketfft.h"
 
-
-
 using namespace pocketfft;
+
+int sinogram2projection(const field<double>& sinogram, const double angle, std::vector<double>& projection){
+    
+    projection.resize(sinogram.width);  
+
+    int angle_index = (int)std::round(angle/(2.0*pi)*sinogram.height) %sinogram.height;//if we always round down then we will get some rotation errors
+    auto sino_iter = sinogram.data.begin();
+
+    std::copy(  sino_iter+(sinogram.width* angle_index   ), 
+                sino_iter+(sinogram.width*(angle_index+1)), 
+                projection.begin());
+    
+    return 1;
+}
 
 int project(const field<double>& phantom, const double angle, std::vector<double>& projection){
     
@@ -41,35 +53,37 @@ int back_project(const std::vector<double>& projection, double angle, field<doub
 
 
 
-int recon_bp(const field<double>& phantom, const int n_proj, field<double>& tomogram){
+int recon_bp(const field<double>& sinogram, const int n_proj, field<double>& tomogram){
     
     const double angle_step = 2.0*pi/n_proj;
     
-    tomogram.fill(0.0);
-    std::vector<double> projection;
-    auto back_projection = field<double>(tomogram.height,tomogram.width);
+    tomogram = field<double>(sinogram.width, sinogram.width, 0.0);
+    auto projection = std::vector<double>(sinogram.width);
+    auto back_projection = field<double>(sinogram.width,sinogram.width);
     for(int i = 0; i < n_proj; i++){
         double angle = i * angle_step;
-        // out.log(DBG) << angle << std::endl;
-        project(phantom, angle, projection);
+        
+        sinogram2projection(sinogram,angle,projection);
+        
         projection *= 8.0*(0.5/(n_proj*back_projection.height));
         back_project(projection, angle, back_projection);
+
         tomogram += back_projection ;
        
     }
     return 1; 
 }
 
-int recon_fbp(const field<double>& phantom, const int n_proj, field<double>& tomogram){
+int recon_fbp(const field<double>& sinogram, const int n_proj, field<double>& tomogram){
     
     const double angle_step = 2.0*pi/n_proj;   
     
-    tomogram.fill(0.0);
+    tomogram = field<double>(sinogram.width, sinogram.width, 0.0);
     std::vector<double> projection;
     auto back_projection = field<double>(tomogram.height,tomogram.width);
     for(double angle = 0.0; angle < 2.0*pi; angle += angle_step){
         // out.log(DBG) << angle << std::endl;
-        project(phantom, angle, projection);
+        sinogram2projection(sinogram,angle,projection);
         
         //fft stuff
         //pad projection
@@ -120,22 +134,22 @@ int recon_fbp(const field<double>& phantom, const int n_proj, field<double>& tom
 }
 
 
-int recon_dfi(const field<double>& phantom, const int n_proj, const int pf, field<double>& tomogram){
+int recon_dfi(const field<double>& sinogram, const int n_proj, const int pf, field<double>& tomogram){
     
     const double angle_step = 2.0*pi/n_proj;   
     auto f_polar_proj = field<std::complex<double>>(n_proj,pf*tomogram.width/2 + 1);
     auto f_tomogram = field<std::complex<double>>(tomogram.height,tomogram.width, 0.0);
     std::vector<double> projection;
-    tomogram.fill(0.0);
+    tomogram = field<double>(sinogram.width, sinogram.width, 0.0);
     //polar fouier space
     for(int i = 0; i < n_proj; i++){
         double angle = i * angle_step;
         // out.log(INF) << angle << std::endl;
         
-        project(phantom, angle, projection);
+        sinogram2projection(sinogram,angle,projection);
         
         projection.resize(pf*projection.size(), 0.0);
-        std::rotate(projection.begin(),projection.begin()+phantom.width/2,projection.end());//rotation very importaint to make phase changes slowly
+        std::rotate(projection.begin(),projection.begin()+sinogram.width/2,projection.end());//rotation very importaint to make phase changes slowly
         
         shape_t shape = {projection.size()};
         stride_t stride_r = {sizeof(double)};
@@ -143,7 +157,7 @@ int recon_dfi(const field<double>& phantom, const int n_proj, const int pf, fiel
         shape_t axes = {0};
 
         auto f_projection = std::vector<std::complex<double>>(shape[0]/2 + 1);
-        double scale_factor = 0.5/(phantom.width*phantom.height);
+        double scale_factor = 0.5/(sinogram.width*sinogram.width);
 
         r2c(shape,
             stride_r, 
@@ -200,18 +214,20 @@ int recon_dfi(const field<double>& phantom, const int n_proj, const int pf, fiel
     return 1;
 }
 
-int recon_art(const field<double>& phantom, const int n_proj, field<double>& tomogram){
+int recon_art(const field<double>& sinogram, const int n_proj, field<double>& tomogram){
     
-    tomogram.fill(0.0);
+    tomogram = field<double>(sinogram.width, sinogram.width, 0.0);
     const double angle_step = 2.0*pi/n_proj; 
     auto tomo_delta = field<double>(tomogram.height,tomogram.width);
     std::vector<double> p;
     std::vector<double> q;
 
     for(int i = 0; i < n_proj; i++){
-        double angle = (1500450271 * i)%n_proj * angle_step;//use a big prime to do the correction in a semi random order 
+        size_t memememe = sizeof(i);
+        size_t fhfhfh = sizeof(n_proj);
+        double angle = (1500450271LL * i)%n_proj * angle_step;//use a big prime to do the correction in a semi random order 
             
-        project(phantom, angle, p);
+        sinogram2projection(sinogram,angle,p);
         project(tomogram, angle, q);
         
         auto correction = p-q;

@@ -37,17 +37,18 @@ int project_intensity(const field<double>& phantom, const double angle, std::vec
 }
 
 int project_attenuation(const field<double>& phantom, const double angle, std::vector<double>& projection){
-    return project_stem(phantom, angle, projection, INTENSITY);
+    return project_stem(phantom, angle, projection, ATTENUATION);
 }
 
 int sinogram_base(const field<double>& phantom, int projections, field<double>& sinogram, integrand i_mode){
     double angle_step = 2*pi/projections;
     
     sinogram = field<double>(projections, phantom.width, 0.0);
+
     auto projection = std::vector<double>(phantom.width);
     for(int i = 0; i < projections; i++){
         double angle = i*angle_step;
-        project_intensity(phantom, angle, projection);
+        project_stem(phantom, angle, projection, i_mode);
         
         std::copy(projection.begin(), projection.end(), 
                   sinogram.data.begin()+(sinogram.width*i));
